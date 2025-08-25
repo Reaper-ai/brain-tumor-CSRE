@@ -4,3 +4,6 @@ shutil
 pathlib
 glob
 matplotlib
+opencv-python
+albumentations
+pytorch-lightning
