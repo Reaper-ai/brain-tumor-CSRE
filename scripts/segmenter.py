@@ -25,6 +25,7 @@ def load_seg_model(modality: str, device: str = "cpu") -> smp.Unet:
     
     try:
         model.load_state_dict(torch.load(MODEL_PATHS[modality], map_location=device))
+        model.to(device)  # Ensure model is moved to the correct device
         model.eval()
         return model
     except Exception as e:
@@ -51,6 +52,8 @@ def segment_image(
     if not slices:
         raise ValueError("No slices provided for segmentation")
 
+    # Ensure model is on the correct device
+    model.to(device)
     pred_masks = []
     model.eval()
 
@@ -58,7 +61,9 @@ def segment_image(
         for i in range(0, len(slices), batch_size):
             batch = torch.cat(slices[i:i+batch_size], dim=0).to(device)
             preds = model(batch)  # [B,C,H,W]
-            pred_masks.extend(preds.cpu())
+            # Convert predictions to individual masks and move to CPU for storage
+            for pred in preds:
+                pred_masks.append(pred.cpu())
 
     return pred_masks
 

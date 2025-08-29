@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 
-def visualize_3d_mask(pred_masks: List[torch.Tensor], class_idx: int = 1):
+def visualize_3d_mask(pred_masks: List[torch.Tensor], class_idx: int = 0):
     """
     Create an interactive 3D volume visualization of a specific class from 2D predicted masks.
 
     Args:
-        pred_masks (List[torch.Tensor]): List of predicted masks [classes, H, W]
-        class_idx (int): Index of the class to visualize (default=1, e.g., tumor)
+        pred_masks (List[torch.Tensor]): List of predicted masks [3, H, W]
+        class_idx (int): Index of the class to visualize (0, 1, or 2)
     """
     # Stack slices into a 3D numpy array
     volume = np.stack([m[class_idx].numpy() for m in pred_masks], axis=0)  # [D,H,W]
@@ -48,11 +48,13 @@ def overlay_2d_mask_multiclass(image: torch.Tensor, mask: torch.Tensor):
     Overlay a 3-class predicted mask on a 2D image and display in Streamlit.
 
     Args:
-        image (torch.Tensor): Original image [1,1,H,W]
-        mask (torch.Tensor): Predicted mask [classes, H, W] (classes=3)
-        class_names (List[str]): Names of the classes
+        image (torch.Tensor): Original image [1,1,H,W] (1 channel grayscale)
+        mask (torch.Tensor): Predicted mask [3, H, W] (3 classes)
     """
     class_names = ["Edema", "Enhancing", "Necrosis"]
+    colors = ["red", "green", "blue"]
+    
+    # Get the grayscale image - squeeze all dimensions to get [H, W]
     img_np = image.squeeze().numpy()
 
     # Calculate tumor areas for each class
@@ -62,15 +64,37 @@ def overlay_2d_mask_multiclass(image: torch.Tensor, mask: torch.Tensor):
         percent = pixels / class_mask.size * 100
         st.write(f"{name} area: {pixels} pixels ({percent:.2f}%)")
 
-    # Overlay with different colors
-    colors = ["Reds", "Greens", "Blues"]
-    fig, ax = plt.subplots()
+    # Create the overlay visualization
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # Show the original grayscale image
     ax.imshow(img_np, cmap='gray')
-    for i, cmap in enumerate(colors):
-        ax.imshow(mask[i].numpy(), cmap=cmap, alpha=0.3)
+    
+    # Overlay each class with different colors
+    for i, (name, color) in enumerate(zip(class_names, colors)):
+        class_mask = mask[i].numpy()
+        # Create a colored overlay where mask > 0.5
+        overlay = np.zeros((*class_mask.shape, 4))  # RGBA
+        
+        # Set color for the overlay
+        if color == "red":
+            overlay[:, :, 0] = class_mask  # Red channel
+        elif color == "green":
+            overlay[:, :, 1] = class_mask  # Green channel
+        elif color == "blue":
+            overlay[:, :, 2] = class_mask  # Blue channel
+            
+        overlay[:, :, 3] = class_mask * 0.6  # Alpha channel
+        
+        # Only show where mask is significant
+        overlay[class_mask < 0.1] = 0
+        
+        ax.imshow(overlay)
+    
     ax.axis('off')
+    ax.set_title("Segmentation Overlay")
     st.pyplot(fig)
-
+    plt.close()
 
 
 def save_volume_nifti_multiclass(pred_masks: List[torch.Tensor], voxel_spacing=(1,1,1)):
@@ -79,16 +103,14 @@ def save_volume_nifti_multiclass(pred_masks: List[torch.Tensor], voxel_spacing=(
     print tumor volumes per class, and provide download in Streamlit.
 
     Args:
-        pred_masks (List[torch.Tensor]): List of predicted masks [classes, H, W]
-        class_names (List[str]): Names of the classes
+        pred_masks (List[torch.Tensor]): List of predicted masks [3, H, W]
         voxel_spacing (tuple): voxel spacing in mm
     """
-
     class_names = ["Edema", "Enhancing", "Necrosis"]
-    num_classes = len(class_names)
-    # Stack slices into [D,H,W,C] then move classes to last dimension
-    volume = np.stack([m.numpy() for m in pred_masks], axis=0)  # [D,C,H,W]
-    volume = np.transpose(volume, (0,2,3,1))  # [D,H,W,C]
+    
+    # Stack slices into [D,C,H,W] then move classes to last dimension
+    volume = np.stack([m.numpy() for m in pred_masks], axis=0)  # [D,3,H,W]
+    volume = np.transpose(volume, (0,2,3,1))  # [D,H,W,3]
 
     # Compute tumor volumes per class
     for i, name in enumerate(class_names):
@@ -97,8 +119,8 @@ def save_volume_nifti_multiclass(pred_masks: List[torch.Tensor], voxel_spacing=(
         volume_mm3 = voxels * np.prod(voxel_spacing)
         st.write(f"{name} volume: {voxels} voxels (~{volume_mm3:.2f} mm³)")
 
-    # Save as NIfTI (C axis can be saved as multiple channels)
-    nifti_img = nib.Nifti1Image(volume.astype(np.uint8), affine=np.eye(4))
+    # Save as NIfTI
+    nifti_img = nib.Nifti1Image(volume.astype(np.float32), affine=np.eye(4))
     buf = io.BytesIO()
     nib.save(nifti_img, buf)
     buf.seek(0)
@@ -110,14 +132,17 @@ def save_volume_nifti_multiclass(pred_masks: List[torch.Tensor], voxel_spacing=(
         mime="application/gzip"
     )
 
-    # Preview middle slice overlay
+    # Preview middle slice overlay - combine all classes
     mid_idx = len(pred_masks) // 2
     fig, ax = plt.subplots()
-    ax.imshow(np.sum(volume[mid_idx,:,:,:], axis=-1), cmap="hot", alpha=0.5)
+    combined_mask = np.sum(volume[mid_idx,:,:,:], axis=-1)
+    ax.imshow(combined_mask, cmap="hot", alpha=0.8)
     ax.axis('off')
+    ax.set_title("Middle Slice Preview")
     st.pyplot(fig)
+    plt.close()
 
-# In postprocessor.py
+
 def post_processor(tensors: List[torch.Tensor], outputs: dict):
     """Process and display model outputs"""
     if not outputs:
@@ -144,15 +169,22 @@ def post_processor(tensors: List[torch.Tensor], outputs: dict):
                 len(masks)-1, 
                 len(masks)//2
             )
+            
             overlay_2d_mask_multiclass(
                 tensors[selected_slice], 
                 masks[selected_slice]
             )
             
-            if st.button("Show 3D Visualization"):
-                visualize_3d_mask(masks)
-                
-            if st.button("Save as NIfTI"):
-                save_volume_nifti_multiclass(masks)
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Show 3D Visualization"):
+                    class_options = ["Edema", "Enhancing", "Necrosis"]
+                    selected_class = st.selectbox("Select class:", class_options)
+                    class_idx = class_options.index(selected_class)
+                    visualize_3d_mask(masks, class_idx)
+            
+            with col2:
+                if st.button("Save as NIfTI"):
+                    save_volume_nifti_multiclass(masks)
         else:
             overlay_2d_mask_multiclass(tensors[0], masks[0])

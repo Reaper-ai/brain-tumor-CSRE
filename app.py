@@ -63,7 +63,7 @@ with tab1:
                 # Start with classification preprocessing (default)
                 tensors = pp.pre_processor(files_to_process, "2D")
                 if tensors:
-                    outputs = pl._2Dpipeline(files_to_process, tensors, analysis_type, modality)
+                    outputs = pl.twoDpipeline(files_to_process, tensors, analysis_type, modality)
                     ptp.post_processor(tensors, outputs)
                 else:
                     st.error("Failed to process files")
@@ -86,5 +86,5 @@ with tab2:
             # Start with classification preprocessing (default)
             tensors = pp.pre_processor(uploaded_files, "3D")
             if tensors:
-                outputs = pl._3Dpipeline(uploaded_files, tensors, analysis_type, modality)
+                outputs = pl.threeDpipeline(uploaded_files, tensors, analysis_type, modality)
                 ptp.post_processor(tensors, outputs)
