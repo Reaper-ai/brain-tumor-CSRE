@@ -23,12 +23,12 @@ preprocess_2d = transforms.Compose([
 
 
 # Modify the preprocessing functions to move tensors to GPU
-def img_to_tensors(uploaded_files: List[BytesIO]) -> List[torch.Tensor]:
+def img_to_tensors(uploaded_files: List[BytesIO], device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')) -> List[torch.Tensor]:
     tensors: List[torch.Tensor] = []
     for f in uploaded_files:
         try:
             img = Image.open(f).convert("L")
-            tensor = preprocess_2d(img).unsqueeze(0).cuda()  # Add .cuda() here
+            tensor = preprocess_2d(img).unsqueeze(0).to(device)
             tensors.append(tensor)
         except Exception as e:
             raise PreprocessingError(f"Error processing image file: {str(e)}")

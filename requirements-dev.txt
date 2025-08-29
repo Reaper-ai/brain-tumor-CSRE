@@ -6,4 +6,4 @@ glob
 matplotlib
 opencv-python
 albumentations
-pytorch-lightning
+segmentation_models_pytorch
