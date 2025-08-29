@@ -17,7 +17,7 @@ MAX_FILES = 8
 st.title("Brain Tumor MRI Analyzer")
 st.write("Upload MRI slices and get **classification** + **segmentation** results.")
 
-# ---------------------------
+# ----------------及ひ-----------
 # Analysis Type and Modality Selection
 # ---------------------------
 col1, col2 = st.columns(2)
@@ -64,7 +64,9 @@ with tab1:
                 tensors = pp.pre_processor(files_to_process, "2D")
                 if tensors:
                     outputs = pl.twoDpipeline(files_to_process, tensors, analysis_type, modality)
-                    ptp.post_processor(tensors, outputs)
+                    # Use display_tensors from pipeline results
+                    display_tensors = outputs.get("display_tensors", tensors)
+                    ptp.post_processor(display_tensors, outputs)
                 else:
                     st.error("Failed to process files")
         except Exception as e:
@@ -87,4 +89,6 @@ with tab2:
             tensors = pp.pre_processor(uploaded_files, "3D")
             if tensors:
                 outputs = pl.threeDpipeline(uploaded_files, tensors, analysis_type, modality)
-                ptp.post_processor(tensors, outputs)
+                # Use display_tensors from pipeline results
+                display_tensors = outputs.get("display_tensors", tensors)
+                ptp.post_processor(display_tensors, outputs)

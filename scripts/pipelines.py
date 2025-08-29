@@ -66,11 +66,14 @@ def twoDpipeline(
         modality: MRI modality type
     
     Returns:
-        Dictionary containing results
+        Dictionary containing results and display tensors
     """
     analysis_type = analysis_type.lower()
     results: Dict[str, Any] = {}
     device = get_device()
+    
+    # Store segmentation tensors for display
+    seg_tensors_for_display = None
     
     if analysis_type in ["classification", "both"]:
         if models["classifier"] is None:
@@ -93,8 +96,16 @@ def twoDpipeline(
         if seg_tensors:
             seg_tensors = [tensor.to(device) for tensor in seg_tensors]
             results["segmentation"] = segmenter.segment_image(seg_tensors, seg_model, device)
+            # Store for display
+            seg_tensors_for_display = [t.cpu() for t in seg_tensors]
         else:
             raise RuntimeError("Failed to get segmentation tensors")
+    
+    # Add appropriate tensors for display
+    if seg_tensors_for_display and analysis_type in ["segmentation", "both"]:
+        results["display_tensors"] = seg_tensors_for_display
+    else:
+        results["display_tensors"] = tensors
     
     return results
 
@@ -114,11 +125,14 @@ def threeDpipeline(
         modality: MRI modality type
     
     Returns:
-        Dictionary containing results
+        Dictionary containing results and display tensors
     """
     analysis_type = analysis_type.lower()
     results: Dict[str, Any] = {}
     device = get_device()
+    
+    # Store segmentation tensors for display
+    seg_tensors_for_display = None
     
     if analysis_type in ["classification", "both"]:
         if models["classifier"] is None:
@@ -151,8 +165,16 @@ def threeDpipeline(
                 device=device,
                 sample_slices=50
             )
+            # Store for display
+            seg_tensors_for_display = [t.cpu() for t in seg_tensors]
         else:
             raise RuntimeError("Failed to get segmentation tensors")
+    
+    # Add appropriate tensors for display
+    if seg_tensors_for_display and analysis_type in ["segmentation", "both"]:
+        results["display_tensors"] = seg_tensors_for_display
+    else:
+        results["display_tensors"] = tensors
     
     return results
 
