@@ -1,6 +1,8 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
+from scripts import loader
+from scripts.classification import ClassificationPipeline
 
 # ------------------- SETUP -------------------
 st.markdown(
@@ -25,18 +27,10 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
-
-
+# model1 -> classification, model2 -> segmentation
+device , model1 , model2 = loader.load_models()
 
 # ------------------- DUMMY PIPELINES -------------------
-
-def ClassificationPipeline(uploaded_file):
-    # Just open the image to confirm it displays
-    img = Image.open(uploaded_file)
-    # Return dummy classification result
-    return {"class": "Glioma", "confidence": 0.87, "preview": img}
 
 def SegmentationPipeline2D(flair_file, t1ce_file):
     # Load the FLAIR image and return a dummy overlay (colored noise)
@@ -72,12 +66,13 @@ with tab1:
     uploaded_file = st.file_uploader("Upload images for Classification", type=["png", "jpg", "jpeg"])
     if uploaded_file is not None:
         with st.spinner("Processing..."):
-            outputs = ClassificationPipeline(uploaded_file)
+            outputs = ClassificationPipeline(uploaded_file, models1, device )
             st.success(" Processing complete!")
             # now display the outputs
             col1, col2, col3 = st.columns([1, 2, 1])  # middle column is wider
             with col2:
-                st.image(outputs["preview"])
+                img = Image.open(uploaded_file)
+                st.image(img)
                 st.write(f"Predicted: {outputs['class']} conf. {outputs['confidence']}")
 
 # ------------------- TAB2 -------------------
