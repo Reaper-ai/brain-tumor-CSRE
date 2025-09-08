@@ -2,7 +2,8 @@ from io import BytesIO
 from PIL import Image
 from typing import Dict
 from torchvision import transforms
-from torch import nn, max, Tensor, device
+from torch import nn, max, Tensor
+import torch
 
 def preprocessor(data: BytesIO) -> Tensor:
     img = Image.open(data).convert("RGB")
@@ -14,16 +15,19 @@ def preprocessor(data: BytesIO) -> Tensor:
                              [0.229, 0.224, 0.225])
     ])
 
-    return transform(img)
+    return transform(img).unsqueeze(0)
 
-def ClassificationPipeline(data: BytesIO, model: nn.Module, device: device) -> Dict[str, str| float]:
+def ClassificationPipeline(data: BytesIO, model: nn.Module, device) -> Dict[str, str| float]:
     labels = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
 
-    pdata  = preprocessor(data).to(device)
-    pred = model(pdata)
-    probs = nn.functional.softmax(pred, dim=1)
+    pdata  = preprocessor(data)
+    pdata = pdata.to(device)
+    model.eval()
+    with torch.no_grad():
+        pred = model(pdata)
+        probs = nn.functional.softmax(pred, dim=1)
+        conf, class_idx = max(probs, dim=1)
 
-    conf, class_idx = max(probs, dim=1)
 
-    return  {"Class" : labels[class_idx.item()], "Confidence" : conf.item()}
+    return  {"class" : labels[class_idx.item()], "confidence" : conf.item()}
 

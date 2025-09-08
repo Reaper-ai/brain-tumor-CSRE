@@ -1,9 +1,8 @@
 import streamlit as st
-import numpy as np
 from PIL import Image
 from scripts import loader
 from scripts.classification import ClassificationPipeline
-
+from scripts.segmentation import SegmentationPipeline2D
 # ------------------- SETUP -------------------
 st.markdown(
     """
@@ -32,24 +31,12 @@ device , model1 , model2 = loader.load_models()
 
 # ------------------- DUMMY PIPELINES -------------------
 
-def SegmentationPipeline2D(flair_file, t1ce_file):
-    # Load the FLAIR image and return a dummy overlay (colored noise)
-    flair_img = np.array(Image.open(flair_file).convert("RGB"))
-    # Make dummy segmentation mask (random colors)
-    random_mask = np.random.randint(0, 255, flair_img.shape, dtype=np.uint8)
-    overlay_img = (0.6 * flair_img + 0.4 * random_mask).astype(np.uint8)
-    return Image.fromarray(overlay_img)
 
 def SegmentationPipeline3D(flair_bulk, t1ce_bulk):
     # Just return a dummy text output
     return "3D segmentation would be displayed or downloadable here (dummy output)."
 
 # ------------------- FUNCTIONS -------------------
-
-def overlay(input_img, segmask):
-    # Dummy overlay: return the same image for now
-    return input_img
-
 
 def display3D(outputs):
     # Dummy 3D display: return a text output
@@ -66,14 +53,14 @@ with tab1:
     uploaded_file = st.file_uploader("Upload images for Classification", type=["png", "jpg", "jpeg"])
     if uploaded_file is not None:
         with st.spinner("Processing..."):
-            outputs = ClassificationPipeline(uploaded_file, models1, device )
+            outputs = ClassificationPipeline(uploaded_file, model1, device )
             st.success(" Processing complete!")
             # now display the outputs
             col1, col2, col3 = st.columns([1, 2, 1])  # middle column is wider
             with col2:
                 img = Image.open(uploaded_file)
                 st.image(img)
-                st.write(f"Predicted: {outputs['class']} conf. {outputs['confidence']}")
+                st.write(f"Predicted: {outputs['class']} conf. {outputs['confidence']:.3f}")
 
 # ------------------- TAB2 -------------------
 with tab2:
@@ -90,13 +77,27 @@ with tab2:
             outputs = SegmentationPipeline2D(flair_slice, t1ce_slice)
 
             if len(outputs["images"]) == 2:
-                st.image(overlay(outputs["images"]))
-                st.write(" ")
-            else:
-                img1, img2 = overlay(outputs["images"])
-                st.image(img1, caption="FLAIR")
-                st.image(img2, caption="T1ce")
-                st.write(" ")
+                col1, col2, col3 = st.columns([1,1,1])
+                with col1:
+                    st.image(outputs["images"][0])
+                with col2:
+                    st.image(outputs["images"][1])
+                    st.write(outputs["uncertainty"])
+                with col3:
+                    st.image(outputs["images"][2])
+            else :
+                col1, col2, col3 , col4 = st.columns([1,2,2,1])
+
+                with col2:
+                    st.image(outputs["images"][0])
+                with col3:
+                    st.image(outputs["images"][1])
+
+                st.write(outputs["uncetainity"])
+
+
+
+
 
 
 
