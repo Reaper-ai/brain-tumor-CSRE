@@ -71,34 +71,18 @@ with tab2:
     tab2.warning("Missing or wrong modalities will produce uncertain results", icon="⚠️")
     process1 = st.button("Process", key="process2D")
     if process1:
-        if not flair_slice or not t1ce_slice:
-            st.error("Please upload both FLAIR and T1ce images")
+        if not (flair_slice or t1ce_slice):
+            st.error("Please upload at least one of FLAIR or T1ce images")
         else:
-            outputs = SegmentationPipeline2D(flair_slice, t1ce_slice)
+            outputs = SegmentationPipeline2D(flair_slice, t1ce_slice, model2, device)
 
-            if len(outputs["images"]) == 2:
-                col1, col2, col3 = st.columns([1,1,1])
-                with col1:
-                    st.image(outputs["images"][0])
-                with col2:
-                    st.image(outputs["images"][1])
-                    st.write(outputs["uncertainty"])
-                with col3:
-                    st.image(outputs["images"][2])
-            else :
-                col1, col2, col3 , col4 = st.columns([1,2,2,1])
-
-                with col2:
-                    st.image(outputs["images"][0])
-                with col3:
-                    st.image(outputs["images"][1])
-
-                st.write(outputs["uncetainity"])
-
-
-
-
-
+            col1, col2, col3 = st.columns([1,1,1])
+            with col1:
+                st.image(outputs["seg_overlay"], caption="Segmentation overlay")
+            with col2:
+                st.image(outputs["entropy_overlay"], caption="Entropy map")
+            with col3:
+                st.image(outputs["confidence_overlay"], caption="Confidence map")
 
 
 # ------------------- TAB3 -------------------
