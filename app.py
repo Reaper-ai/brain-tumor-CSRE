@@ -29,23 +29,11 @@ st.markdown(
 # model1 -> classification, model2 -> segmentation
 device , model1 , model2 = loader.load_models()
 
-# ------------------- DUMMY PIPELINES -------------------
-
-
-def SegmentationPipeline3D(flair_bulk, t1ce_bulk):
-    # Just return a dummy text output
-    return "3D segmentation would be displayed or downloadable here (dummy output)."
-
-# ------------------- FUNCTIONS -------------------
-
-def display3D(outputs):
-    # Dummy 3D display: return a text output
-    st.write(outputs)
 # ------------------- HEADER -------------------
 st.title("Brain Tumor CSRE")
 st.subheader("Brain Tumor Classification and Segmentation")
-tabs = ["Classification", "2D Segmentation", "3D Segmentation"]
-tab1, tab2, tab3 = st.tabs(tabs)
+tabs = ["Classification", "2D Segmentation"]
+tab1, tab2 = st.tabs(tabs)
 
 # ------------------- TAB1 -------------------
 with tab1:
@@ -84,23 +72,6 @@ with tab2:
             with col3:
                 st.image(outputs["confidence_overlay"], caption="Confidence map")
 
-
-# ------------------- TAB3 -------------------
-with tab3:
-    st.subheader("3D Volume Segmenter")
-    flair_bulk = st.file_uploader("Upload NifTI file of FLAIR modality", type=["nii", "nii.gz"])
-    t1ce_bulk = st.file_uploader("Upload NifTI file of T1 ce/gd modality", type=["nii", "nii.gz"])
-    tab3.warning("Missing or wrong modalities will produce uncertain results", icon="⚠️")
-    process2 = st.button("Process", key="process3D")
-    if process2:
-        if not flair_bulk or not t1ce_bulk:
-            st.error("Please upload both NIfTI files")
-        else:
-            outputs = SegmentationPipeline3D(flair_bulk, t1ce_bulk)
-            col1, col2 , col3 = st.columns([1, 2, 1])
-            with col2:
-                display3D(outputs)
-                st.write(outputs)
 
 # ------------------- FOOTER -------------------
 st.markdown("---")

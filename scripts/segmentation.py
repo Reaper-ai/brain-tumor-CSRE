@@ -40,7 +40,7 @@ def preprocess(flair: BytesIO, t1ce: BytesIO) -> Tuple[Tensor, Tensor]:
 
 
 
-def make_overlay(base_img1 : Tensor, base_img2 : Tensor, mask: Tensor, bg:Tensor, alpha : int =0.5, cmap: str ="jet"):
+def make_overlay(base_img1 : Tensor, base_img2 : Tensor, mask: Tensor, alpha : int =0.5, cmap: str ="jet"):
     """Overlay mask (H,W) on grayscale base_img (H,W)"""
 
     if flags["t1"] and flags["t2"]:
@@ -55,7 +55,6 @@ def make_overlay(base_img1 : Tensor, base_img2 : Tensor, mask: Tensor, bg:Tensor
 
 
     mask = mask.cpu().numpy()
-    bg = bg.cpu().numpy()
 
     base_img = (base_img - base_img.min()) / (base_img.max() - base_img.min() + 1e-8)
     base_rgb = np.stack([base_img]*3, axis=-1)
@@ -85,16 +84,10 @@ def SegmentationPipeline2D(flair : BytesIO, t1ce: BytesIO, model: nn.Module, dev
     confidence = prob.max(dim=1).values                    # [B, H, W]
     pred_mask = pred.argmax(dim=1).squeeze()            # [H, W]
 
-    bg = (pred_mask == 0)
-
-
     rdict = {
-        'seg_overlay': make_overlay(d1, d2, pred_mask, bg, cmap="viridis"),
-        'entropy_overlay': make_overlay(d1, d2, entropy.squeeze(0), bg),
-        'confidence_overlay': make_overlay(d1, d2, confidence.squeeze(0), bg, cmap="inferno_r")
+        'seg_overlay': make_overlay(d1, d2, pred_mask, cmap="viridis"),
+        'entropy_overlay': make_overlay(d1, d2, entropy.squeeze(0)),
+        'confidence_overlay': make_overlay(d1, d2, confidence.squeeze(0), cmap="inferno_r")
     }
 
     return rdict
-
-def SegmentationPipeline3D(flair, t1ce):
-    return None
