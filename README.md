@@ -42,15 +42,15 @@ Built with **PyTorch** and deployed with **Streamlit**.
 ---
 
 ## Dataset
-* **Classification**: 
-* **Segmentation**: [BraTS Dataset](https://www.med.upenn.edu/cbica/brats2020/)
+* **Classification**: [Brain Tumor MRI Dataset @Kaggle](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)
+* **Segmentation**: [BraTS20 Dataset @Kaggle](https://www.kaggle.com/datasets/awsaf49/brats20-dataset-training-validation)
 * **Modalities used**: **FLAIR** and **T1ce** only.
 ---
 
 ## Model Architectures
 
 * **Classifier**: Mobile-Net-V2
-* **Segmenter**: U-Net-based Efficient-Net-B0 multiclass segmentation.
+* **Segmenter**: Efficient-Net-B0 encoder based U-Net.
 * **Loss Functions**:
 
   * Classification → CrossEntropyLoss
