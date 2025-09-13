@@ -29,6 +29,11 @@ st.markdown(
 # model1 -> classification, model2 -> segmentation
 device , model1 , model2 = loader.load_models()
 
+scale_1 = Image.open("./scales/viridis_discrete.png")
+scale_2 = Image.open("./scales/jet_continuous.png")
+scale_3 = Image.open("./scales/inferno_r_continuous.png")
+
+
 # ------------------- HEADER -------------------
 st.title("Brain Tumor CSRE")
 st.subheader("Brain Tumor Classification and Segmentation")
@@ -67,11 +72,13 @@ with tab2:
             col1, col2, col3 = st.columns([1,1,1])
             with col1:
                 st.image(outputs["seg_overlay"], caption="Segmentation overlay")
+                st.image(scale_1, "Sub-regions")
             with col2:
                 st.image(outputs["entropy_overlay"], caption="Entropy map")
+                st.image(scale_2, caption="Uncertainty")
             with col3:
                 st.image(outputs["confidence_overlay"], caption="Confidence map")
-
+                st.image(scale_3, caption="Confidence")
 
 # ------------------- FOOTER -------------------
 st.markdown("---")

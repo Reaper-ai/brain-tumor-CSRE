@@ -12,7 +12,15 @@ flags = {"t1" : True, "t2" : True}
 
 
 def preprocess(flair: BytesIO, t1ce: BytesIO) -> Tuple[Tensor, Tensor]:
+    """Preprocess flair and t1ce images to be fed to the model.
+        
+    Args:
+        flair (BytesIO): FLAIR modality image bytes
+        t1ce (BytesIO): T1ce modality image bytes
 
+    Returns:
+        Tuple[Tensor, Tensor]: Preprocessed and normalized tensors for FLAIR and T1ce images
+    """
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
         transforms.ToTensor(),
@@ -41,7 +49,18 @@ def preprocess(flair: BytesIO, t1ce: BytesIO) -> Tuple[Tensor, Tensor]:
 
 
 def make_overlay(base_img1 : Tensor, base_img2 : Tensor, mask: Tensor, alpha : int =0.5, cmap: str ="jet"):
-    """Overlay mask (H,W) on grayscale base_img (H,W)"""
+    """Overlay mask on grayscale base images.
+
+    Args:
+        base_img1 (Tensor): First base image tensor of shape (H,W)
+        base_img2 (Tensor): Second base image tensor of shape (H,W)
+        mask (Tensor): Mask tensor to overlay of shape (H,W)
+        alpha (int, optional): Transparency of overlay. Defaults to 0.5.
+        cmap (str, optional): Colormap to use for overlay. Defaults to "jet".
+
+    Returns:
+        np.ndarray: RGB overlay image array
+    """
 
     if flags["t1"] and flags["t2"]:
         base_img1 = base_img1.squeeze(0).cpu().numpy()
@@ -68,7 +87,21 @@ def make_overlay(base_img1 : Tensor, base_img2 : Tensor, mask: Tensor, alpha : i
 
 
 def SegmentationPipeline2D(flair : BytesIO, t1ce: BytesIO, model: nn.Module, device) -> Dict[str , Image]:
-    d1 , d2 = preprocess(flair, t1ce)
+    """Process FLAIR and T1ce images through segmentation model pipeline.
+
+    Args:
+        flair (BytesIO): FLAIR modality image bytes
+        t1ce (BytesIO): T1ce modality image bytes
+        model (nn.Module): Neural network model for segmentation
+        device: Device to run model on (cpu/cuda)
+
+    Returns:
+        Dict[str, Image]: Dictionary containing overlay images:
+            - 'seg_overlay': Segmentation mask overlay
+            - 'entropy_overlay': Entropy map overlay
+            - 'confidence_overlay': Confidence map overlay
+    """
+    d1, d2 = preprocess(flair, t1ce)
     d1 = d1.to(device)
     d2 = d2.to(device)
 
