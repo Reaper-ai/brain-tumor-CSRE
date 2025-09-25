@@ -35,8 +35,8 @@ Built with **PyTorch** and deployed with **Streamlit**.
 ├── app.py                 # Streamlit app
 ├── requirements.txt
 ├── requirements-dev.txt
-└── README.md
-
+├── README.md
+└── demo/                  # Example outputs
 ```
 
 ---

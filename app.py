@@ -75,10 +75,10 @@ with tab2:
                 st.image(scale_1, "Sub-regions")
             with col2:
                 st.image(outputs["entropy_overlay"], caption="Entropy map")
-                st.image(scale_2, caption="Uncertainty")
+                st.image(scale_2, "Uncertainty")
             with col3:
                 st.image(outputs["confidence_overlay"], caption="Confidence map")
-                st.image(scale_3, caption="Confidence")
+                st.image(scale_3, "Confidence")
 
 # ------------------- FOOTER -------------------
 st.markdown("---")
