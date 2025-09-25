@@ -35,8 +35,8 @@ Built with **PyTorch** and deployed with **Streamlit**.
 ├── app.py                 # Streamlit app
 ├── requirements.txt
 ├── requirements-dev.txt
-├── README.md
-└── demo/                  # Example outputs
+└── README.md
+
 ```
 
 ---
@@ -92,12 +92,6 @@ streamlit run app.py
 ### Multiclass Segmentation
 
 * IOU Score (average): **74.76%**
-
----
-
-## Demo
-
-[Demo video]("emp")
 
 ---
 
