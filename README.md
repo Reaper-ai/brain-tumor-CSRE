@@ -94,7 +94,18 @@ streamlit run app.py
 * IOU Score (average): **74.76%**
 
 ---
+## Sample outputs 
 
+![classification output](demo/classification_result.png)
+Output from classifer 
+
+![segementation output both modalities](demo/segementation_results_both_modalities.png)
+Output from segmentation mode, both flair and t1ce modalities were passed, the result has less uncertainty and the model is more confident
+
+
+![segemwntation output single modality](demo/segementation_results_single_modality.png)
+Output from segmentation mode, only flair modality was pass this time leading to large uncertainty and less confidence
+---
 ## 📌 Future Work
 
 * Extend to **all four modalities** (FLAIR, T1, T1ce, T2).
